@@ -1,0 +1,176 @@
+---
+title: "assign 3"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+#Opened the data file and re-named to rna_counts
+rna_counts <- read.csv("C:/Users/smart/Desktop/eXpress_dm_counts.csv", header = T, row.names =1)
+View(rna_counts)
+```
+```{r}
+#2-Creates a function called data_mean which allows the user to input the data.frame and then perform either log2 or mean on the data depending on what the user wants
+
+
+```
+
+```{r}
+data_mean <- function(df, columnname, use_log2 = FALSE){
+   if (use_log2 == TRUE) {
+     #This is important as we need to get rid of the zeroes for the log2 to work
+     df[df == 0] <- NA
+ 	return (mean(log2(df[[columnname]]) ,na.rm = TRUE))
+ 	} else {
+ 	mean(df[[columnname]] , na.rm=TRUE)
+ 	}
+}
+```
+
+```{r}
+
+#3-Opened the data file and re-named to rna_counts
+# rna_counts <- read.csv("C:/Users/smart/Desktop/eXpress_dm_counts.csv", header = T, row.names =1)
+starttime3 <- Sys.time()
+coloumn_data_mean <- c(numeric(ncol(rna_counts))) 
+names(coloumn_data_mean) <- colnames(rna_counts) 
+for (i in 1:length(rna_counts)) {
+  #use the function from before - data_mean to do the calculation
+  coloumn_data_mean[i] <- data_mean(rna_counts, i)
+  #loop command
+}
+
+print(coloumn_data_mean)
+endtime3 <- Sys.time() - starttime3
+print(endtime3)
+#yes, the males have a higher mean expression
+```
+
+```{r}
+#question 4 - REMOVE coloumn name - not being recognized with coloumnname
+startitme <- Sys.time()
+apply_fx <- function(df, use_log2 = FALSE){
+  if (use_log2 == TRUE) {
+   df[df == 0] <- NA
+ 	return (apply(log2(df),2, mean, na.rm = TRUE))
+ 	} else {
+ 	apply(df, 2, mean)
+ 	} 
+}
+endtime <- Sys.time() - startitme
+time_dff <- (endtime - endtime3)
+print(time_dff)
+
+
+#Based on the time difference, it seems that using lapply is faster. But the time varies every run. 
+```
+
+```{r}
+#question 5 
+
+colMeans(rna_counts)
+```
+
+```{r}
+#6-Creates a function called data_mean which allows the user to input the data.frame and then perform either log2 or mean on the data depending on what the user wants. Removed the coloumnname which was found in question 2, as its not needed. 
+rowMeanFunc <- function(df, use_log2 = FALSE){
+  # Loop through the values of the rows, and calculate mean
+  rowMean <- vector()
+  for(i in 1: nrow(df)){
+    currentRowVector <- vector()
+    
+    # Loop Through and initilize vector with all the rows values
+    for (j in 1:length(df)) {
+      
+      if(df[i,j] == 0){
+        df[i,j] <- NA
+      }
+      currentRowVector<- c(currentRowVector, df[i,j])
+    }
+    
+    # Calculate Mean for the desired row
+    currentRowMean <- mean(currentRowVector, na.rm= TRUE)
+    
+    #If use_log2 is true, use log2 mean
+    if(use_log2){
+      currentRowMean <- mean(log2(currentRowVector), na.rm = TRUE)
+    }
+    
+    # Store mean within vector variable
+    rowMean <- c(rowMean, currentRowMean)
+  }
+  
+  return(rowMean)
+}
+
+result <- rowMeanFunc(rna_counts, FALSE)
+
+print(result)
+
+
+
+```
+
+```{r}
+#Question 7: askes for specific differences, easier to hard code specific coloumns
+meanLgMaleHdHorn <- data_mean(rna_counts, 30)
+meanLgMaleHdHorn1 <- data_mean(rna_counts, 33)
+meanLgMaleHdHorn2 <- data_mean(rna_counts,45)
+meanLgMaleHdHorn3 <- data_mean(rna_counts,53)
+meanSmMaleHdHorn <- data_mean(rna_counts, 26)
+meanSmMaleHdHorn1 <- data_mean(rna_counts, 37)
+meanSmMaleHdHorn2 <- data_mean(rna_counts, 41)
+meanSmMaleHdHorn3 <- data_mean(rna_counts, 49)
+
+diff <- ((meanLgMaleHdHorn + meanLgMaleHdHorn1 + meanLgMaleHdHorn2 + meanLgMaleHdHorn3)/4) - ((meanSmMaleHdHorn + meanSmMaleHdHorn3 + meanSmMaleHdHorn2 + meanSmMaleHdHorn1)/4)
+print(diff)
+```
+
+```{r}
+# 8-Loop through the values of the rows, and calculate diff
+rowDiff <- vector()
+for(i in 1: nrow(rna_counts)){
+  currentRowDiff <- 0
+  
+  # Loop Through and initilize vector with all the rows values
+  for (j in 1:length(rna_counts)) {
+    currentRowDiff <- currentRowDiff - rna_counts[i,j]
+  }
+
+  
+  # Store mean within vector variable
+  rowDiff <- c(rowDiff, currentRowDiff)
+}
+#Toggle TRUE/FALSE, for log2 or mean
+rowMean <- rowMeanFunc(rna_counts, TRUE)
+plot(rowMean, rowDiff)
+
+```
+
+
+
